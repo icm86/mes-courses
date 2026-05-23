@@ -9,8 +9,7 @@
   :root {
     --cream: #FAF8F3; --ink: #1A1814; --muted: #7A7570; --border: #E8E4DC;
     --accent: #2D6A4F; --accent-light: #E8F4EE; --accent-mid: #52B788;
-    --warm: #D4A853; --carrefour: #004A99; --picnic: #E8481F;
-    --chip-bg: #EEEAE2;
+    --carrefour: #004A99; --picnic: #E8481F; --chip-bg: #EEEAE2;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--cream); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.5; min-height: 100vh; }
@@ -45,13 +44,13 @@
   .section-icon { font-size: 20px; }
   .section-select-all { margin-left: auto; font-size: 11px; color: var(--muted); cursor: pointer; border: none; background: none; font-family: 'DM Sans', sans-serif; padding: 4px 8px; border-radius: 6px; }
   .section-select-all:hover { background: var(--chip-bg); color: var(--ink); }
-  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
   .item-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; position: relative; user-select: none; }
   .item-card:hover { border-color: var(--accent-mid); }
   .item-card.checked { background: var(--accent-light); border-color: var(--accent); }
   .item-card.hidden { display: none; }
   .item-name { font-size: 13px; font-weight: 500; color: var(--ink); line-height: 1.3; margin-bottom: 4px; padding-right: 24px; }
-  .item-brand { font-size: 11px; color: var(--muted); }
+  .item-qty { font-size: 11px; color: var(--muted); }
   .item-freq { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; margin-top: 6px; }
   .freq-Hebdo { background: #FDF4E3; color: #8B5E1A; }
   .freq-Quinzaine { background: #E8F4EE; color: #1A6B3A; }
@@ -82,11 +81,11 @@
   .picnic-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; }
   .picnic-item:last-child { border-bottom: none; }
   .picnic-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
-  .picnic-brand { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .picnic-qty { color: var(--muted); font-size: 12px; margin-left: auto; }
   .carrefour-links { display: flex; flex-direction: column; gap: 8px; }
   .carrefour-link { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: var(--ink); font-size: 13px; transition: border-color 0.15s; }
   .carrefour-link:hover { border-color: var(--carrefour); }
-  .carrefour-link span.arrow { color: var(--carrefour); font-size: 12px; font-weight: 500; }
+  .carrefour-link .arrow { color: var(--carrefour); font-size: 12px; font-weight: 500; }
   .copy-btn { width: 100%; margin-top: 1rem; padding: 12px; background: var(--ink); color: var(--cream); border: none; border-radius: 10px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; transition: background 0.15s; }
   .copy-btn:hover { background: #333; }
   .copy-btn.copied { background: var(--accent); }
@@ -110,16 +109,16 @@
   <h1>Mes <span>Courses</span></h1>
   <div class="header-right">
     <span class="sync-status" id="syncStatus">Chargement…</span>
-    <div class="header-count" id="headerCount">0 sélectionnés</div>
+    <div class="header-count" id="headerCount"></div>
   </div>
 </header>
 
 <div class="layout">
-  <nav class="sidebar" id="sidebar">
+  <nav class="sidebar">
     <div class="sidebar-title">Catégories</div>
     <div id="catNav"></div>
   </nav>
-  <main class="main" id="main">
+  <main class="main">
     <div class="search-bar">
       <span>🔍</span>
       <input type="text" id="searchInput" placeholder="Rechercher un produit…">
@@ -131,7 +130,7 @@
       <button class="freq-chip" data-freq="Mensuel">Mensuel</button>
       <button class="freq-chip" data-freq="Selon recettes">Selon recettes</button>
     </div>
-    <div class="error-banner" id="errorBanner">Impossible de charger les données depuis Google Sheet. Vérifiez que le fichier est bien partagé en lecture publique.</div>
+    <div class="error-banner" id="errorBanner">Impossible de charger les données. Vérifiez que le Google Sheet est bien partagé en lecture publique.</div>
     <div id="sections"><div class="loading"><div class="spinner"></div>Chargement de tes courses…</div></div>
   </main>
 </div>
@@ -169,16 +168,16 @@
 <script>
 const SHEET_ID = '1ygL8kTzAj3MB-tGqhLfdn54zsTrLFQX1w_wlOv8Nj48';
 const SHEET_TABS = [
-  { name: 'Frais & Fromages',       icon: '🧀' },
-  { name: 'Viandes & Poissons',     icon: '🥩' },
-  { name: 'Fruits & Légumes',       icon: '🥦' },
-  { name: 'Épicerie Sucrée',        icon: '🍫' },
-  { name: 'Charcuterie & Traiteur', icon: '🥓' },
+  { name: 'Frais & Fromages',        icon: '🧀' },
+  { name: 'Viandes & Poissons',      icon: '🥩' },
+  { name: 'Fruits & Légumes',        icon: '🥦' },
+  { name: 'Épicerie Sucrée',         icon: '🍫' },
+  { name: 'Charcuterie & Traiteur',  icon: '🥓' },
   { name: 'Boulangerie & Pâtisserie',icon: '🥖' },
-  { name: 'Épicerie Salée',         icon: '🥫' },
-  { name: 'Boissons',               icon: '🥤' },
-  { name: 'Surgelés',               icon: '❄️' },
-  { name: 'Hygiène & Entretien',    icon: '🧴' },
+  { name: 'Épicerie Salée',          icon: '🥫' },
+  { name: 'Boissons',                icon: '🥤' },
+  { name: 'Surgelés',                icon: '❄️' },
+  { name: 'Hygiène & Entretien',     icon: '🧴' },
 ];
 
 let CATEGORIES = [];
@@ -194,16 +193,14 @@ async function fetchSheet(tabName) {
   const rows = json.table.rows;
   const items = [];
   rows.forEach((row, i) => {
-    if (i < 2) return; // skip title + header rows
+    if (i < 2) return; // skip title row + header row
     const cells = row.c;
     if (!cells || !cells[0] || !cells[0].v) return;
-    const name  = cells[0]?.v || '';
-    const brand = cells[1]?.v || '';
-    const qty   = cells[2]?.v || '';
-    const freq  = cells[3]?.v || '';
-    const notes = cells[4]?.v || '';
-    const link  = cells[5]?.v || '';
-    if (name && name !== 'Produit') items.push({ name, brand, qty, freq, notes, link });
+    const name = String(cells[0]?.v || '').trim();
+    const qty  = String(cells[1]?.v || '').trim();
+    const freq = String(cells[2]?.v || '').trim();
+    const link = String(cells[3]?.v || '').trim();
+    if (name && name !== 'Produit') items.push({ name, qty, freq, link });
   });
   return items;
 }
@@ -212,7 +209,11 @@ async function loadAllSheets() {
   const syncEl = document.getElementById('syncStatus');
   try {
     const results = await Promise.all(
-      SHEET_TABS.map(tab => fetchSheet(tab.name).then(items => ({ ...tab, id: tab.name.toLowerCase().replace(/[^a-z]/g,'_'), items })))
+      SHEET_TABS.map(tab => fetchSheet(tab.name).then(items => ({
+        ...tab,
+        id: tab.name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        items
+      })))
     );
     CATEGORIES = results.filter(c => c.items.length > 0);
     syncEl.textContent = '✓ Synchronisé';
@@ -230,9 +231,9 @@ async function loadAllSheets() {
 
 function freqClass(f) {
   if (!f) return 'freq-other';
-  if (f.includes('Hebdo') || f === 'hebdo') return 'freq-Hebdo';
-  if (f.includes('Quinzaine') || f === 'quinzaine') return 'freq-Quinzaine';
-  if (f.includes('Mensuel') || f === 'mensuel') return 'freq-Mensuel';
+  if (f.toLowerCase().includes('hebdo')) return 'freq-Hebdo';
+  if (f.toLowerCase().includes('quinzaine')) return 'freq-Quinzaine';
+  if (f.toLowerCase().includes('mensuel')) return 'freq-Mensuel';
   return 'freq-other';
 }
 
@@ -273,7 +274,7 @@ function buildUI() {
       card.innerHTML = `
         <div class="item-check">✓</div>
         <div class="item-name">${item.name}</div>
-        ${item.brand ? `<div class="item-brand">${item.brand}${item.qty ? ' · ' + item.qty : ''}</div>` : (item.qty ? `<div class="item-brand">${item.qty}</div>` : '')}
+        ${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}
         <div><span class="item-freq ${freqClass(item.freq)}">${item.freq || '—'}</span></div>`;
       grid.appendChild(card);
     });
@@ -299,8 +300,9 @@ function toggleSection(catId) {
 function clearAll() { checked.clear(); updateUI(); }
 
 function matchesFilter(item) {
-  if (activeFreq !== 'all' && item.freq !== activeFreq) return false;
-  if (searchQuery && !item.name.toLowerCase().includes(searchQuery) && !(item.brand && item.brand.toLowerCase().includes(searchQuery))) return false;
+  const freq = item.freq || '';
+  if (activeFreq !== 'all' && freq !== activeFreq) return false;
+  if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) return false;
   return true;
 }
 
@@ -318,9 +320,11 @@ function updateUI() {
     if (navCount) navCount.textContent = count > 0 ? count : '';
   });
   const total = checked.size;
-  document.getElementById('actionBar').classList.toggle('visible', total > 0);
-  document.getElementById('headerCount').classList.toggle('visible', total > 0);
-  document.getElementById('headerCount').textContent = `${total} produit${total > 1 ? 's' : ''}`;
+  const actionBar = document.getElementById('actionBar');
+  const headerCount = document.getElementById('headerCount');
+  actionBar.classList.toggle('visible', total > 0);
+  headerCount.classList.toggle('visible', total > 0);
+  headerCount.textContent = `${total} produit${total > 1 ? 's' : ''}`;
   document.getElementById('actionSummary').innerHTML = `<strong>${total} produit${total > 1 ? 's' : ''}</strong> sélectionné${total > 1 ? 's' : ''}`;
 }
 
@@ -348,7 +352,7 @@ function openPicnicModal() {
     catItems.forEach(item => {
       const li = document.createElement('li');
       li.className = 'picnic-item';
-      li.innerHTML = `<span class="picnic-dot"></span><span>${item.name}${item.qty ? ' (' + item.qty + ')' : ''}</span>${item.brand ? `<span class="picnic-brand">${item.brand}</span>` : ''}`;
+      li.innerHTML = `<span class="picnic-dot"></span><span>${item.name}</span>${item.qty ? `<span class="picnic-qty">${item.qty}</span>` : ''}`;
       list.appendChild(li);
     });
   });
@@ -364,13 +368,9 @@ function openCarrefourModal() {
     link.className = 'carrefour-link';
     link.target = '_blank';
     link.rel = 'noopener';
-    if (item.link) {
-      link.href = item.link;
-    } else {
-      const q = encodeURIComponent((item.brand ? item.brand + ' ' : '') + item.name);
-      link.href = `https://www.carrefour.fr/recherche?q=${q}`;
-    }
-    link.innerHTML = `<span>${item.catIcon} ${item.name}${item.brand ? ' <em style="color:var(--muted);font-style:normal;font-size:11px">· ' + item.brand + '</em>' : ''}</span><span class="arrow">${item.link ? 'Fiche produit →' : 'Rechercher →'}</span>`;
+    const hasLink = item.link && item.link.startsWith('http');
+    link.href = hasLink ? item.link : `https://www.carrefour.fr/recherche?q=${encodeURIComponent(item.name)}`;
+    link.innerHTML = `<span>${item.catIcon} ${item.name}${item.qty ? ' <em style="color:var(--muted);font-style:normal;font-size:11px">· ' + item.qty + '</em>' : ''}</span><span class="arrow">${hasLink ? 'Fiche produit →' : 'Rechercher →'}</span>`;
     container.appendChild(link);
   });
   document.getElementById('carrefourModal').classList.add('open');
@@ -385,7 +385,7 @@ function copyList() {
   let text = '🛒 MES COURSES\n\n';
   Object.entries(byCat).forEach(([cat, catItems]) => {
     text += cat + '\n';
-    catItems.forEach(item => { text += `• ${item.name}${item.brand ? ' (' + item.brand + ')' : ''}${item.qty ? ' — ' + item.qty : ''}\n`; });
+    catItems.forEach(item => { text += `• ${item.name}${item.qty ? ' — ' + item.qty : ''}\n`; });
     text += '\n';
   });
   navigator.clipboard.writeText(text).then(() => {
@@ -404,7 +404,10 @@ document.querySelectorAll('.freq-chip').forEach(chip => {
     updateUI();
   });
 });
-document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value.toLowerCase().trim(); updateUI(); });
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.toLowerCase().trim();
+  updateUI();
+});
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 });
