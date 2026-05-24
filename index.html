@@ -185,6 +185,9 @@ const SHEET_TABS = [
   { name: 'Hygiène & Entretien',     icon: '🧴' },
 ];
 
+// Special tab with different structure: Catégorie / Produit / Quantité / Recette(s) / Lien Carrefour
+const RECETTES_TAB = 'Ingrédients recettes';
+
 let CATEGORIES = [];
 const checked = new Set();
 let activeFreq = 'all';
@@ -197,15 +200,29 @@ async function fetchSheet(tabName) {
   const json = JSON.parse(text.substring(47, text.length - 2));
   const rows = json.table.rows;
   const items = [];
+  const isRecettes = tabName === RECETTES_TAB;
   rows.forEach((row, i) => {
     if (i < 2) return; // skip title row + header row
     const cells = row.c;
-    if (!cells || !cells[0] || !cells[0].v) return;
-    const name = String(cells[0]?.v || '').trim();
-    const qty  = String(cells[1]?.v || '').trim();
-    const freq = String(cells[2]?.v || '').trim();
-    const link = String(cells[3]?.v || '').trim();
-    if (name && name !== 'Produit') items.push({ name, qty, freq, link });
+    if (!cells) return;
+    if (isRecettes) {
+      // Structure: Catégorie / Produit / Quantité / Recette(s) / Lien Carrefour
+      if (!cells[1] || !cells[1].v) return;
+      const category = String(cells[0]?.v || '').trim();
+      const name     = String(cells[1]?.v || '').trim();
+      const qty      = String(cells[2]?.v || '').trim();
+      const recettes = String(cells[3]?.v || '').trim();
+      const link     = String(cells[4]?.v || '').trim();
+      if (name && name !== 'Produit') items.push({ name, qty, freq: recettes || '—', link, category, isRecetteItem: true });
+    } else {
+      // Structure: Produit / Quantité / Fréquence / Lien Carrefour
+      if (!cells[0] || !cells[0].v) return;
+      const name = String(cells[0]?.v || '').trim();
+      const qty  = String(cells[1]?.v || '').trim();
+      const freq = String(cells[2]?.v || '').trim();
+      const link = String(cells[3]?.v || '').trim();
+      if (name && name !== 'Produit') items.push({ name, qty, freq, link });
+    }
   });
   return items;
 }
@@ -213,6 +230,7 @@ async function fetchSheet(tabName) {
 async function loadAllSheets() {
   const syncEl = document.getElementById('syncStatus');
   try {
+    // Fetch standard tabs
     const results = await Promise.all(
       SHEET_TABS.map(tab => fetchSheet(tab.name).then(items => ({
         ...tab,
@@ -220,7 +238,33 @@ async function loadAllSheets() {
         items
       })))
     );
-    CATEGORIES = results.filter(c => c.items.length > 0);
+
+    // Fetch ingrédients recettes tab and group by category
+    const recettesItems = await fetchSheet(RECETTES_TAB);
+    const recettesByCat = {};
+    const catIcons = {
+      'Viandes & Poissons': '🥩', 'Fruits & Légumes': '🥦', 'Épicerie Sucrée': '🍫',
+      'Frais & Fromages': '🧀', 'Charcuterie & Traiteur': '🥓', 'Boulangerie & Pâtisserie': '🥖',
+      'Épicerie Salée': '🥫', 'Boissons': '🥤', 'Surgelés': '❄️', 'Hygiène & Entretien': '🧴'
+    };
+    recettesItems.forEach(item => {
+      const cat = item.category || 'Divers';
+      if (!recettesByCat[cat]) recettesByCat[cat] = [];
+      recettesByCat[cat].push(item);
+    });
+
+    // Build one virtual category for ingrédients recettes, grouped by subcategory
+    const recettesCategory = {
+      name: 'Ingrédients recettes',
+      icon: '🧺',
+      id: 'ingredients_recettes',
+      items: recettesItems,
+      subCategories: Object.entries(recettesByCat).map(([cat, items]) => ({
+        name: cat, icon: catIcons[cat] || '📦', items
+      }))
+    };
+
+    CATEGORIES = [...results.filter(c => c.items.length > 0), recettesCategory];
     syncEl.textContent = '✓ Synchronisé';
     syncEl.className = 'sync-status ok';
     buildUI();
@@ -266,23 +310,55 @@ function buildUI() {
         <h2>${cat.name}</h2>
         <button class="section-select-all" onclick="toggleSection('${cat.id}')">Tout cocher</button>
       </div>
-      <div class="items-grid" id="grid_${cat.id}"></div>`;
+      <div id="content_${cat.id}"></div>`;
     sectionsEl.appendChild(section);
 
-    const grid = section.querySelector(`#grid_${cat.id}`);
-    cat.items.forEach((item, idx) => {
-      const id = itemId(cat.id, idx);
-      const card = document.createElement('div');
-      card.className = 'item-card';
-      card.id = 'card_' + id;
-      card.onclick = () => toggleItem(id);
-      card.innerHTML = `
-        <div class="item-check">✓</div>
-        <div class="item-name">${item.name}</div>
-        ${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}
-        <div><span class="item-freq ${freqClass(item.freq)}">${item.freq || '—'}</span></div>`;
-      grid.appendChild(card);
-    });
+    const contentEl = section.querySelector(`#content_${cat.id}`);
+
+    if (cat.subCategories) {
+      // Ingrédients recettes: render by subcategory
+      cat.subCategories.forEach(sub => {
+        const subTitle = document.createElement('div');
+        subTitle.style.cssText = 'font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:12px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;';
+        subTitle.textContent = sub.icon + ' ' + sub.name;
+        contentEl.appendChild(subTitle);
+        const grid = document.createElement('div');
+        grid.className = 'items-grid';
+        contentEl.appendChild(grid);
+        sub.items.forEach((item) => {
+          const globalIdx = cat.items.indexOf(item);
+          const id = itemId(cat.id, globalIdx);
+          const card = document.createElement('div');
+          card.className = 'item-card';
+          card.id = 'card_' + id;
+          card.onclick = () => toggleItem(id);
+          card.innerHTML = `
+            <div class="item-check">✓</div>
+            <div class="item-name">${item.name}</div>
+            ${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}
+            <div><span class="item-freq freq-other">${item.freq || '—'}</span></div>`;
+          grid.appendChild(card);
+        });
+      });
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'items-grid';
+      grid.id = 'grid_' + cat.id;
+      contentEl.appendChild(grid);
+      cat.items.forEach((item, idx) => {
+        const id = itemId(cat.id, idx);
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.id = 'card_' + id;
+        card.onclick = () => toggleItem(id);
+        card.innerHTML = `
+          <div class="item-check">✓</div>
+          <div class="item-name">${item.name}</div>
+          ${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}
+          <div><span class="item-freq ${freqClass(item.freq)}">${item.freq || '—'}</span></div>`;
+        grid.appendChild(card);
+      });
+    }
   });
 }
 
