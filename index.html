@@ -264,7 +264,9 @@ async function loadAllSheets() {
       }))
     };
 
-    CATEGORIES = [...results.filter(c => c.items.length > 0), recettesCategory];
+    console.log('Recettes items loaded:', recettesItems.length, recettesItems);
+    console.log('RecettesByCat:', recettesByCat);
+    CATEGORIES = [...results.filter(c => c.items.length > 0), ...(recettesItems.length > 0 ? [recettesCategory] : [])];
     syncEl.textContent = '✓ Synchronisé';
     syncEl.className = 'sync-status ok';
     buildUI();
