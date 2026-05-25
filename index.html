@@ -186,7 +186,7 @@ const SHEET_TABS = [
 ];
 
 // Special tab with different structure: Catégorie / Produit / Quantité / Recette(s) / Lien Carrefour
-const RECETTES_TAB = 'Ingrédients recettes';
+const RECETTES_TAB = 'Ingredients recettes';
 
 let CATEGORIES = [];
 const checked = new Set();
@@ -194,7 +194,9 @@ let activeFreq = 'all';
 let searchQuery = '';
 
 async function fetchSheet(tabName) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+  const encoded = tabName.normalize('NFC');
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(encoded)}`;
+  console.log('Fetching:', tabName, url);
   const res = await fetch(url);
   const text = await res.text();
   const json = JSON.parse(text.substring(47, text.length - 2));
