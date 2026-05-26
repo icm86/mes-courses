@@ -10,6 +10,8 @@
     --cream: #FAF8F3; --ink: #1A1814; --muted: #7A7570; --border: #E8E4DC;
     --accent: #2D6A4F; --accent-light: #E8F4EE; --accent-mid: #52B788;
     --carrefour: #004A99; --picnic: #E8481F; --chip-bg: #EEEAE2;
+    --batch: #1D9E75; --batch-light: #E1F5EE; --batch-dark: #0F6E56;
+    --rapide: #378ADD; --rapide-light: #E6F1FB; --rapide-dark: #0C447C;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--cream); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.5; min-height: 100vh; }
@@ -22,14 +24,24 @@
   .sync-status { font-size: 11px; color: rgba(255,255,255,0.5); }
   .sync-status.ok { color: var(--accent-mid); }
   .sync-status.error { color: #E8481F; }
-  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 60px); }
-  .sidebar { background: white; border-right: 1px solid var(--border); padding: 1.5rem 1rem; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+
+  /* TABS */
+  .main-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 2rem; }
+  .main-tab { padding: 14px 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+  .main-tab:hover { color: var(--ink); }
+  .main-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .tab-content { display: none; }
+  .tab-content.active { display: flex; }
+
+  /* COURSES TAB */
+  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 110px); }
+  .sidebar { background: white; border-right: 1px solid var(--border); padding: 1.5rem 1rem; position: sticky; top: 110px; height: calc(100vh - 110px); overflow-y: auto; }
   .sidebar-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0 0.5rem; margin-bottom: 0.75rem; }
   .cat-nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); text-align: left; transition: background 0.15s; margin-bottom: 2px; }
   .cat-nav-btn:hover { background: var(--chip-bg); }
   .cat-nav-btn .cat-icon { font-size: 16px; width: 20px; text-align: center; }
   .cat-nav-btn .cat-checked { margin-left: auto; font-size: 11px; color: var(--accent); font-weight: 500; min-width: 28px; text-align: right; }
-  .main { padding: 2rem; }
+  .main-content { padding: 2rem; flex: 1; }
   .search-bar { display: flex; align-items: center; gap: 10px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 1.5rem; }
   .search-bar input { flex: 1; border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); outline: none; }
   .search-bar input::placeholder { color: var(--muted); }
@@ -58,6 +70,13 @@
   .freq-other { background: var(--chip-bg); color: var(--muted); }
   .item-check { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: all 0.15s; color: transparent; }
   .item-card.checked .item-check { background: var(--accent); border-color: var(--accent); color: white; }
+  .loading { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+  .loading .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-banner { background: #FEF0EC; border: 1px solid #F5C6B8; border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; font-size: 13px; color: #C0392B; display: none; }
+  .error-banner.visible { display: block; }
+
+  /* ACTION BAR */
   .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 12px; z-index: 200; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
   .action-bar.visible { transform: translateY(0); }
   .action-summary { flex: 1; font-size: 13px; color: var(--muted); }
@@ -69,9 +88,13 @@
   .btn-carrefour:hover { background: #003580; }
   .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); }
   .btn-ghost:hover { background: var(--chip-bg); color: var(--ink); }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-accent:hover { background: var(--batch-dark); }
+
+  /* MODALS */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,24,20,0.55); z-index: 300; align-items: flex-end; justify-content: center; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--cream); border-radius: 20px 20px 0 0; width: 100%; max-width: 680px; max-height: 80vh; overflow-y: auto; padding: 2rem; animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1); }
+  .modal { background: var(--cream); border-radius: 20px 20px 0 0; width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; padding: 2rem; animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1); }
   @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
   .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; }
@@ -87,24 +110,80 @@
   .picnic-check:hover { border-color: var(--accent); }
   .picnic-item-name { flex: 1; }
   .picnic-qty { color: var(--muted); font-size: 12px; }
-  .carrefour-links { display: flex; flex-direction: column; gap: 8px; }
-  .carrefour-link { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: var(--ink); font-size: 13px; transition: border-color 0.15s; }
-  .carrefour-link:hover { border-color: var(--carrefour); }
-  .carrefour-link .arrow { color: var(--carrefour); font-size: 12px; font-weight: 500; }
   .copy-btn { width: 100%; margin-top: 1rem; padding: 12px; background: var(--ink); color: var(--cream); border: none; border-radius: 10px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; transition: background 0.15s; }
   .copy-btn:hover { background: #333; }
   .copy-btn.copied { background: var(--accent); }
-  .loading { text-align: center; padding: 4rem 2rem; color: var(--muted); }
-  .loading .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .error-banner { background: #FEF0EC; border: 1px solid #F5C6B8; border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; font-size: 13px; color: #C0392B; display: none; }
-  .error-banner.visible { display: block; }
+
+  /* PLANNING TAB */
+  .planning-wrap { padding: 2rem; flex: 1; }
+  .planning-legend { display: flex; gap: 16px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 3px; border-radius: 2px; }
+  .planning-section-title { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+  .week-grid { display: grid; grid-template-columns: 70px repeat(5, 1fr); gap: 8px; margin-bottom: 2rem; }
+  .weekend-grid { display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px; margin-bottom: 2rem; }
+  .day-header { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); text-align: center; padding: 6px 0; }
+  .slot-label { font-size: 11px; color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; }
+  .meal-slot { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 10px; min-height: 68px; cursor: pointer; transition: all 0.15s; position: relative; }
+  .meal-slot:hover { border-color: var(--accent-mid); }
+  .meal-slot.batch { border-left: 3px solid var(--batch); }
+  .meal-slot.rapide { border-left: 3px solid var(--rapide); }
+  .meal-slot.libre { background: var(--chip-bg); cursor: default; border-color: var(--border); opacity: 0.6; }
+  .meal-slot.empty { border-style: dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 4px; }
+  .meal-slot.empty:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .meal-slot-name { font-size: 12px; font-weight: 500; line-height: 1.3; margin-bottom: 5px; }
+  .meal-slot-tag { display: inline-block; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 99px; }
+  .tag-batch { background: var(--batch-light); color: var(--batch-dark); }
+  .tag-rapide { background: var(--rapide-light); color: var(--rapide-dark); }
+  .tag-libre { background: var(--chip-bg); color: var(--muted); }
+  .meal-slot-remove { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; background: var(--chip-bg); border: none; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; color: var(--muted); opacity: 0; transition: opacity 0.15s; }
+  .meal-slot:hover .meal-slot-remove { opacity: 1; }
+  .empty-plus { font-size: 20px; line-height: 1; }
+  .empty-label { font-size: 11px; }
+  .planning-actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
+
+  /* RECIPE PICKER MODAL */
+  .recipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 1rem; }
+  .recipe-card { background: white; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; }
+  .recipe-card:hover { border-color: var(--accent-mid); }
+  .recipe-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .recipe-card-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .recipe-card-meta { display: flex; align-items: center; gap: 8px; }
+  .recipe-card-tag { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 99px; }
+  .recipe-card-time { font-size: 11px; color: var(--muted); }
+  .recipe-card-link { font-size: 11px; color: var(--rapide); text-decoration: none; margin-left: auto; }
+
+  /* BATCH TAB */
+  .batch-wrap { padding: 2rem; flex: 1; }
+  .batch-timeline { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .batch-row { display: flex; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .batch-row:last-child { border-bottom: none; }
+  .batch-time-badge { font-size: 11px; font-weight: 500; color: var(--batch-dark); background: var(--batch-light); padding: 3px 10px; border-radius: 99px; min-width: 54px; text-align: center; }
+  .batch-row-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .batch-row-link { font-size: 11px; color: var(--rapide); text-decoration: none; }
+  .batch-row-duration { font-size: 11px; color: var(--muted); background: var(--chip-bg); padding: 2px 8px; border-radius: 99px; }
+  .batch-total { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; font-size: 13px; color: var(--muted); }
+  .batch-total strong { color: var(--ink); font-size: 14px; }
+  .no-batch { text-align: center; padding: 3rem 2rem; color: var(--muted); font-size: 14px; }
+
+  /* SHOPPING LIST FROM PLANNING */
+  .ingredients-list { list-style: none; }
+  .ingredients-section { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 1.25rem 0 0.5rem; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .ingredient-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; }
+  .ingredient-item:last-child { border-bottom: none; }
+  .ingredient-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
+  .ingredient-source { margin-left: auto; font-size: 11px; color: var(--muted); }
+
   @media (max-width: 700px) {
     .layout { grid-template-columns: 1fr; }
     .sidebar { display: none; }
-    .main { padding: 1rem; }
+    .main-content { padding: 1rem; }
+    .planning-wrap { padding: 1rem; }
+    .batch-wrap { padding: 1rem; }
     .action-bar { flex-wrap: wrap; padding: 1rem; }
     .items-grid { grid-template-columns: 1fr 1fr; }
+    .week-grid { grid-template-columns: 50px repeat(5, 1fr); }
+    .recipe-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -118,28 +197,87 @@
   </div>
 </header>
 
-<div class="layout">
-  <nav class="sidebar">
-    <div class="sidebar-title">Catégories</div>
-    <div id="catNav"></div>
-  </nav>
-  <main class="main">
-    <div class="search-bar">
-      <span>🔍</span>
-      <input type="text" id="searchInput" placeholder="Rechercher un produit…">
-    </div>
-    <div class="freq-filters">
-      <button class="freq-chip all active" data-freq="all">Tout</button>
-      <button class="freq-chip" data-freq="Hebdo">Hebdo</button>
-      <button class="freq-chip" data-freq="Quinzaine">Quinzaine</button>
-      <button class="freq-chip" data-freq="Mensuel">Mensuel</button>
-      <button class="freq-chip" data-freq="Selon recettes">Selon recettes</button>
-    </div>
-    <div class="error-banner" id="errorBanner">Impossible de charger les données. Vérifiez que le Google Sheet est bien partagé en lecture publique.</div>
-    <div id="sections"><div class="loading"><div class="spinner"></div>Chargement de tes courses…</div></div>
-  </main>
+<div class="main-tabs">
+  <button class="main-tab active" onclick="switchTab('courses')">🛒 Mes courses</button>
+  <button class="main-tab" onclick="switchTab('planning')">📅 Planning menus</button>
+  <button class="main-tab" onclick="switchTab('batch')">👩‍🍳 Batch cooking</button>
 </div>
 
+<!-- TAB: COURSES -->
+<div class="tab-content active" id="tab-courses">
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-title">Catégories</div>
+      <div id="catNav"></div>
+    </nav>
+    <div class="main-content">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Rechercher un produit…">
+      </div>
+      <div class="freq-filters">
+        <button class="freq-chip all active" data-freq="all">Tout</button>
+        <button class="freq-chip" data-freq="Hebdo">Hebdo</button>
+        <button class="freq-chip" data-freq="Quinzaine">Quinzaine</button>
+        <button class="freq-chip" data-freq="Mensuel">Mensuel</button>
+        <button class="freq-chip" data-freq="Selon recettes">Selon recettes</button>
+      </div>
+      <div class="error-banner" id="errorBanner">Impossible de charger les données. Vérifiez que le Google Sheet est bien partagé en lecture publique.</div>
+      <div id="sections"><div class="loading"><div class="spinner"></div>Chargement de tes courses…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: PLANNING -->
+<div class="tab-content" id="tab-planning">
+  <div class="planning-wrap">
+    <div class="planning-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--batch)"></div>Plat batch (préparé dimanche)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rapide)"></div>Plat rapide (— 20 min)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div>Libre / Restes</div>
+    </div>
+
+    <div class="planning-section-title">Dîners de la semaine</div>
+    <div class="week-grid" id="weekGrid">
+      <div></div>
+      <div class="day-header">Lun</div>
+      <div class="day-header">Mar</div>
+      <div class="day-header">Mer</div>
+      <div class="day-header">Jeu</div>
+      <div class="day-header">Ven</div>
+      <div class="slot-label">Dîner</div>
+      <div class="meal-slot libre" id="slot-lundi"><div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span></div>
+      <div class="meal-slot libre" id="slot-mardi"><div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span></div>
+      <div class="meal-slot libre" id="slot-mercredi" style="cursor:default"><div class="meal-slot-name" style="color:var(--muted)">Restes</div><span class="meal-slot-tag tag-libre">libre</span></div>
+      <div class="meal-slot libre" id="slot-jeudi"><div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span></div>
+      <div class="meal-slot libre" id="slot-vendredi"><div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span></div>
+    </div>
+
+    <div class="planning-section-title">Midis week-end</div>
+    <div class="weekend-grid">
+      <div></div>
+      <div class="day-header">Samedi</div>
+      <div class="day-header">Dimanche</div>
+      <div class="slot-label">Midi</div>
+      <div class="meal-slot libre" id="slot-samedi"><div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span></div>
+      <div class="meal-slot libre" id="slot-dimanche"><div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span></div>
+    </div>
+
+    <div class="planning-actions">
+      <button class="btn btn-accent" onclick="generateShoppingList()">🛒 Générer la liste de courses</button>
+      <button class="btn btn-ghost" onclick="clearPlanning()">Tout effacer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: BATCH -->
+<div class="tab-content" id="tab-batch">
+  <div class="batch-wrap">
+    <div id="batchContent"><div class="no-batch">Planifie des plats batch dans l'onglet Planning pour voir ton programme du dimanche ici.</div></div>
+  </div>
+</div>
+
+<!-- ACTION BAR -->
 <div class="action-bar" id="actionBar">
   <div class="action-summary" id="actionSummary"></div>
   <button class="btn btn-ghost" onclick="clearAll()">Tout effacer</button>
@@ -147,6 +285,7 @@
   <button class="btn btn-carrefour" onclick="openCarrefourModal()">🚗 Carrefour Drive</button>
 </div>
 
+<!-- MODAL: PICNIC -->
 <div class="modal-overlay" id="picnicModal">
   <div class="modal">
     <div class="modal-header">
@@ -159,14 +298,31 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="carrefourModal">
+<!-- MODAL: RECIPE PICKER -->
+<div class="modal-overlay" id="recipeModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Carrefour Drive</div>
-      <button class="modal-close" onclick="closeModal('carrefourModal')">✕</button>
+      <div class="modal-title" id="recipeModalTitle">Choisir un plat</div>
+      <button class="modal-close" onclick="closeModal('recipeModal')">✕</button>
     </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Clique sur chaque produit pour ouvrir sa fiche sur Carrefour Drive.</p>
-    <div class="carrefour-links" id="carrefourLinks"></div>
+    <div class="recipe-grid" id="recipeGrid"></div>
+    <div style="margin-top:1.5rem;display:flex;gap:10px;">
+      <button class="btn btn-accent" style="flex:1" onclick="confirmRecipe()">Confirmer</button>
+      <button class="btn btn-ghost" onclick="closeModal('recipeModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SHOPPING LIST FROM PLANNING -->
+<div class="modal-overlay" id="shoppingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Liste de courses — semaine</div>
+      <button class="modal-close" onclick="closeModal('shoppingModal')">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Ingrédients nécessaires pour tes plats planifiés cette semaine.</p>
+    <ul class="picnic-list" id="shoppingList"></ul>
+    <button class="copy-btn" id="copyShoppingBtn" onclick="copyShoppingList()">Copier la liste</button>
   </div>
 </div>
 
@@ -184,19 +340,36 @@ const SHEET_TABS = [
   { name: 'Surgelés',                icon: '❄️' },
   { name: 'Hygiène & Entretien',     icon: '🧴' },
 ];
-
-// Special tab with different structure: Catégorie / Produit / Quantité / Recette(s) / Lien Carrefour
 const RECETTES_TAB = 'Ingredients recettes';
+
+const RECIPES = [{"id": "puree_jambon", "name": "Purée jambon", "type": "batch", "time": 40, "cookidoo": "https://cookidoo.fr/recipes/recipe/fr-FR/r54132", "ingredients": ["Pommes de terre", "Lait demi-écrémé", "Beurre", "Jambon"]}, {"id": "gaufres_quiche", "name": "Gaufres quiche", "type": "batch", "time": 50, "cookidoo": "https://cookidoo.fr/recipes/recipe/fr-FR/r343083", "ingredients": ["Oeufs", "Crème semi-épaisse", "Emmental râpé", "Jambon"]}, {"id": "muffins_jambon", "name": "Muffins jambon fumé", "type": "batch", "time": 45, "cookidoo": "https://cookidoo.fr/recipes/recipe/fr-FR/r451566", "ingredients": ["Oeufs", "Farine", "Jambon", "Emmental râpé"]}, {"id": "tartiflette", "name": "Tartiflette", "type": "batch", "time": 75, "cookidoo": "https://cookidoo.fr/recipes/recipe/fr-FR/r209629", "ingredients": ["Pommes de terre", "Reblochon", "Lardons", "Crème semi-épaisse"]}, {"id": "pates_poulet", "name": "Pâtes poulet champignons", "type": "batch", "time": 40, "cookidoo": "https://cookidoo.fr/recipes/recipe/fr-FR/r160928", "ingredients": ["Pâtes", "Poulet", "Champignons", "Crème semi-épaisse"]}, {"id": "courgettes_farcies", "name": "Courgettes farcies", "type": "batch", "time": 45, "cookidoo": "https://cookidoo.fr/recipes/recipe/fr-FR/r138431", "ingredients": ["Courgettes", "Chair à saucisse", "Emmental râpé", "Tomates"]}, {"id": "omelette_fromage", "name": "Omelette fromage", "type": "rapide", "time": 10, "cookidoo": "", "ingredients": ["Oeufs", "Emmental râpé"]}, {"id": "omelette_knackis", "name": "Omelette knackis", "type": "rapide", "time": 10, "cookidoo": "", "ingredients": ["Oeufs", "Knackis"]}, {"id": "spag_bolo", "name": "Spaghettis bolognaise", "type": "rapide", "time": 15, "cookidoo": "", "ingredients": ["Spaghettis", "Boeuf haché bolognaise", "Sauce bolognaise Panzani", "Emmental râpé"]}, {"id": "carbonara", "name": "Carbonara", "type": "rapide", "time": 20, "cookidoo": "", "ingredients": ["Nouilles fines", "Lardons", "Crème semi-épaisse", "Oeufs", "Emmental râpé"]}, {"id": "pizza", "name": "Pizza maison", "type": "rapide", "time": 20, "cookidoo": "", "ingredients": ["Pâte à pizza", "Coulis de tomates", "Emmental râpé", "Jambon"]}, {"id": "riz_poulet_coco", "name": "Riz poulet coco curry", "type": "batch", "time": 30, "cookidoo": "", "ingredients": ["Riz", "Poulet", "Lait de coco", "Curry", "Ananas en boîte"]}];
+
+// Planning state
+const SLOTS = ['lundi','mardi','jeudi','vendredi','samedi','dimanche'];
+const planning = {}; // slot -> recipe id
+let currentSlot = null;
+let currentRecipeId = null;
 
 let CATEGORIES = [];
 const checked = new Set();
 let activeFreq = 'all';
 let searchQuery = '';
 
+// ---- TAB SWITCHING ----
+function switchTab(tab) {
+  document.querySelectorAll('.main-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['courses','planning','batch'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('actionBar').classList.toggle('visible', tab === 'courses' && checked.size > 0);
+  if (tab === 'batch') renderBatch();
+}
+
+// ---- SHEET LOADING ----
 async function fetchSheet(tabName) {
   const encoded = tabName.normalize('NFC');
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(encoded)}`;
-  console.log('Fetching:', tabName, url);
   const res = await fetch(url);
   const text = await res.text();
   const json = JSON.parse(text.substring(47, text.length - 2));
@@ -204,11 +377,10 @@ async function fetchSheet(tabName) {
   const items = [];
   const isRecettes = tabName === RECETTES_TAB;
   rows.forEach((row, i) => {
-    if (i < 2) return; // skip title row + header row
+    if (i < 2) return;
     const cells = row.c;
     if (!cells) return;
     if (isRecettes) {
-      // Structure: Catégorie / Produit / Quantité / Recette(s) / Lien Carrefour
       if (!cells[1] || !cells[1].v) return;
       const category = String(cells[0]?.v || '').trim();
       const name     = String(cells[1]?.v || '').trim();
@@ -217,7 +389,6 @@ async function fetchSheet(tabName) {
       const link     = String(cells[4]?.v || '').trim();
       if (name && name !== 'Produit') items.push({ name, qty, freq: recettes || '—', link, category, isRecetteItem: true });
     } else {
-      // Structure: Produit / Quantité / Fréquence / Lien Carrefour
       if (!cells[0] || !cells[0].v) return;
       const name = String(cells[0]?.v || '').trim();
       const qty  = String(cells[1]?.v || '').trim();
@@ -232,47 +403,30 @@ async function fetchSheet(tabName) {
 async function loadAllSheets() {
   const syncEl = document.getElementById('syncStatus');
   try {
-    // Fetch standard tabs
     const results = await Promise.all(
       SHEET_TABS.map(tab => fetchSheet(tab.name).then(items => ({
-        ...tab,
-        id: tab.name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-        items
+        ...tab, id: tab.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), items
       })))
     );
-
-    // Fetch ingrédients recettes tab and group by category
     const recettesItems = await fetchSheet(RECETTES_TAB);
     const recettesByCat = {};
-    const catIcons = {
-      'Viandes & Poissons': '🥩', 'Fruits & Légumes': '🥦', 'Épicerie Sucrée': '🍫',
-      'Frais & Fromages': '🧀', 'Charcuterie & Traiteur': '🥓', 'Boulangerie & Pâtisserie': '🥖',
-      'Épicerie Salée': '🥫', 'Boissons': '🥤', 'Surgelés': '❄️', 'Hygiène & Entretien': '🧴'
-    };
+    const catIcons = { 'Viandes & Poissons':'🥩','Fruits & Légumes':'🥦','Épicerie Sucrée':'🍫','Frais & Fromages':'🧀','Charcuterie & Traiteur':'🥓','Boulangerie & Pâtisserie':'🥖','Épicerie Salée':'🥫','Boissons':'🥤','Surgelés':'❄️','Hygiène & Entretien':'🧴' };
     recettesItems.forEach(item => {
       const cat = item.category || 'Divers';
       if (!recettesByCat[cat]) recettesByCat[cat] = [];
       recettesByCat[cat].push(item);
     });
-
-    // Build one virtual category for ingrédients recettes, grouped by subcategory
     const recettesCategory = {
-      name: 'Ingrédients recettes',
-      icon: '🧺',
-      id: 'ingredients_recettes',
+      name: 'Ingrédients recettes', icon: '🧺', id: 'ingredients_recettes',
       items: recettesItems,
-      subCategories: Object.entries(recettesByCat).map(([cat, items]) => ({
-        name: cat, icon: catIcons[cat] || '📦', items
-      }))
+      subCategories: Object.entries(recettesByCat).map(([cat, items]) => ({ name: cat, icon: catIcons[cat] || '📦', items }))
     };
-
-    console.log('Recettes items loaded:', recettesItems.length, recettesItems);
-    console.log('RecettesByCat:', recettesByCat);
     CATEGORIES = [...results.filter(c => c.items.length > 0), ...(recettesItems.length > 0 ? [recettesCategory] : [])];
     syncEl.textContent = '✓ Synchronisé';
     syncEl.className = 'sync-status ok';
     buildUI();
     updateUI();
+    initPlanning();
   } catch(e) {
     syncEl.textContent = 'Erreur de sync';
     syncEl.className = 'sync-status error';
@@ -282,6 +436,7 @@ async function loadAllSheets() {
   }
 }
 
+// ---- UI BUILD ----
 function freqClass(f) {
   if (!f) return 'freq-other';
   if (f.toLowerCase().includes('hebdo')) return 'freq-Hebdo';
@@ -289,7 +444,6 @@ function freqClass(f) {
   if (f.toLowerCase().includes('mensuel')) return 'freq-Mensuel';
   return 'freq-other';
 }
-
 function itemId(catId, idx) { return `${catId}__${idx}`; }
 
 function buildUI() {
@@ -297,30 +451,19 @@ function buildUI() {
   const catNavEl = document.getElementById('catNav');
   sectionsEl.innerHTML = '';
   catNavEl.innerHTML = '';
-
   CATEGORIES.forEach(cat => {
     const navBtn = document.createElement('button');
     navBtn.className = 'cat-nav-btn';
     navBtn.innerHTML = `<span class="cat-icon">${cat.icon}</span>${cat.name}<span class="cat-checked" id="nav_${cat.id}"></span>`;
     navBtn.onclick = () => document.getElementById('sec_' + cat.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     catNavEl.appendChild(navBtn);
-
     const section = document.createElement('div');
     section.className = 'section';
     section.id = 'sec_' + cat.id;
-    section.innerHTML = `
-      <div class="section-header">
-        <span class="section-icon">${cat.icon}</span>
-        <h2>${cat.name}</h2>
-        <button class="section-select-all" onclick="toggleSection('${cat.id}')">Tout cocher</button>
-      </div>
-      <div id="content_${cat.id}"></div>`;
+    section.innerHTML = `<div class="section-header"><span class="section-icon">${cat.icon}</span><h2>${cat.name}</h2><button class="section-select-all" onclick="toggleSection('${cat.id}')">Tout cocher</button></div><div id="content_${cat.id}"></div>`;
     sectionsEl.appendChild(section);
-
     const contentEl = section.querySelector(`#content_${cat.id}`);
-
     if (cat.subCategories) {
-      // Ingrédients recettes: render by subcategory
       cat.subCategories.forEach(sub => {
         const subTitle = document.createElement('div');
         subTitle.style.cssText = 'font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:12px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;';
@@ -329,18 +472,14 @@ function buildUI() {
         const grid = document.createElement('div');
         grid.className = 'items-grid';
         contentEl.appendChild(grid);
-        sub.items.forEach((item) => {
+        sub.items.forEach(item => {
           const globalIdx = cat.items.indexOf(item);
           const id = itemId(cat.id, globalIdx);
           const card = document.createElement('div');
           card.className = 'item-card';
           card.id = 'card_' + id;
           card.onclick = () => toggleItem(id);
-          card.innerHTML = `
-            <div class="item-check">✓</div>
-            <div class="item-name">${item.name}</div>
-            ${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}
-            <div><span class="item-freq freq-other">${item.freq || '—'}</span></div>`;
+          card.innerHTML = `<div class="item-check">✓</div><div class="item-name">${item.name}</div>${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}<div><span class="item-freq freq-other">${item.freq || '—'}</span></div>`;
           grid.appendChild(card);
         });
       });
@@ -355,11 +494,7 @@ function buildUI() {
         card.className = 'item-card';
         card.id = 'card_' + id;
         card.onclick = () => toggleItem(id);
-        card.innerHTML = `
-          <div class="item-check">✓</div>
-          <div class="item-name">${item.name}</div>
-          ${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}
-          <div><span class="item-freq ${freqClass(item.freq)}">${item.freq || '—'}</span></div>`;
+        card.innerHTML = `<div class="item-check">✓</div><div class="item-name">${item.name}</div>${item.qty ? `<div class="item-qty">${item.qty}</div>` : ''}<div><span class="item-freq ${freqClass(item.freq)}">${item.freq || '—'}</span></div>`;
         grid.appendChild(card);
       });
     }
@@ -370,7 +505,6 @@ function toggleItem(id) {
   if (checked.has(id)) checked.delete(id); else checked.add(id);
   updateUI();
 }
-
 function toggleSection(catId) {
   const cat = CATEGORIES.find(c => c.id === catId);
   if (!cat) return;
@@ -381,16 +515,13 @@ function toggleSection(catId) {
   });
   updateUI();
 }
-
 function clearAll() { checked.clear(); updateUI(); }
-
 function matchesFilter(item) {
   const freq = item.freq || '';
   if (activeFreq !== 'all' && freq !== activeFreq) return false;
   if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) return false;
   return true;
 }
-
 function updateUI() {
   CATEGORIES.forEach(cat => {
     cat.items.forEach((item, idx) => {
@@ -407,12 +538,126 @@ function updateUI() {
   const total = checked.size;
   const actionBar = document.getElementById('actionBar');
   const headerCount = document.getElementById('headerCount');
-  actionBar.classList.toggle('visible', total > 0);
+  const isCoursesTab = document.getElementById('tab-courses').classList.contains('active');
+  actionBar.classList.toggle('visible', total > 0 && isCoursesTab);
   headerCount.classList.toggle('visible', total > 0);
   headerCount.textContent = `${total} produit${total > 1 ? 's' : ''}`;
   document.getElementById('actionSummary').innerHTML = `<strong>${total} produit${total > 1 ? 's' : ''}</strong> sélectionné${total > 1 ? 's' : ''}`;
 }
 
+// ---- PLANNING ----
+function initPlanning() {
+  SLOTS.forEach(slot => {
+    const el = document.getElementById('slot-' + slot);
+    if (!el) return;
+    if (slot === 'mercredi') return;
+    el.onclick = () => openRecipePicker(slot);
+  });
+}
+
+function openRecipePicker(slot) {
+  currentSlot = slot;
+  currentRecipeId = planning[slot] || null;
+  document.getElementById('recipeModalTitle').textContent = 'Choisir un plat — ' + slot.charAt(0).toUpperCase() + slot.slice(1);
+  const grid = document.getElementById('recipeGrid');
+  grid.innerHTML = '';
+  RECIPES.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'recipe-card' + (currentRecipeId === r.id ? ' selected' : '');
+    card.onclick = () => { currentRecipeId = r.id; document.querySelectorAll('.recipe-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); };
+    const tagClass = r.type === 'batch' ? 'tag-batch' : 'tag-rapide';
+    const tagLabel = r.type === 'batch' ? 'batch' : 'rapide';
+    card.innerHTML = `<div class="recipe-card-name">${r.name}</div><div class="recipe-card-meta"><span class="recipe-card-tag ${tagClass}">${tagLabel}</span><span class="recipe-card-time">${r.time} min</span>${r.cookidoo ? `<a class="recipe-card-link" href="${r.cookidoo}" target="_blank" onclick="event.stopPropagation()">Cookidoo ↗</a>` : ''}</div>`;
+    grid.appendChild(card);
+  });
+  document.getElementById('recipeModal').classList.add('open');
+}
+
+function confirmRecipe() {
+  if (!currentSlot || !currentRecipeId) return;
+  planning[currentSlot] = currentRecipeId;
+  renderSlot(currentSlot);
+  closeModal('recipeModal');
+}
+
+function renderSlot(slot) {
+  const el = document.getElementById('slot-' + slot);
+  if (!el) return;
+  const recipeId = planning[slot];
+  if (!recipeId) {
+    el.className = 'meal-slot libre';
+    el.innerHTML = `<div class="meal-slot-name" style="color:var(--muted)">—</div><span class="meal-slot-tag tag-libre">à planifier</span>`;
+    el.onclick = () => openRecipePicker(slot);
+    return;
+  }
+  const r = RECIPES.find(x => x.id === recipeId);
+  if (!r) return;
+  el.className = 'meal-slot ' + r.type;
+  el.innerHTML = `<button class="meal-slot-remove" onclick="event.stopPropagation();removeMeal('${slot}')">✕</button><div class="meal-slot-name">${r.name}</div><span class="meal-slot-tag ${r.type === 'batch' ? 'tag-batch' : 'tag-rapide'}">${r.type}</span>`;
+  el.onclick = () => openRecipePicker(slot);
+}
+
+function removeMeal(slot) {
+  delete planning[slot];
+  renderSlot(slot);
+}
+
+function clearPlanning() {
+  SLOTS.forEach(slot => { delete planning[slot]; renderSlot(slot); });
+}
+
+function generateShoppingList() {
+  const planned = Object.values(planning).map(id => RECIPES.find(r => r.id === id)).filter(Boolean);
+  if (planned.length === 0) { alert('Planifie d\'abord des plats dans ton planning !'); return; }
+  const allIngredients = [];
+  planned.forEach(r => { r.ingredients.forEach(ing => { if (!allIngredients.includes(ing)) allIngredients.push(ing); }); });
+  const list = document.getElementById('shoppingList');
+  list.innerHTML = '';
+  const title = document.createElement('li');
+  title.className = 'picnic-section-title';
+  title.textContent = `Pour ${planned.length} plat${planned.length > 1 ? 's' : ''} planifié${planned.length > 1 ? 's' : ''}`;
+  list.appendChild(title);
+  allIngredients.forEach(ing => {
+    const li = document.createElement('li');
+    li.className = 'picnic-item';
+    li.innerHTML = `<div class="picnic-check" onclick="togglePicnicItem(this)">✓</div><span class="picnic-item-name">${ing}</span>`;
+    list.appendChild(li);
+  });
+  document.getElementById('shoppingModal').classList.add('open');
+}
+
+// ---- BATCH ----
+function renderBatch() {
+  const batchRecipes = Object.values(planning).map(id => RECIPES.find(r => r.id === id)).filter(r => r && r.type === 'batch');
+  const el = document.getElementById('batchContent');
+  if (batchRecipes.length === 0) {
+    el.innerHTML = '<div class="no-batch">Aucun plat batch planifié cette semaine.<br>Ajoute des plats dans l\'onglet Planning !</div>';
+    return;
+  }
+  let currentTime = 14 * 60;
+  let totalTime = 0;
+  let html = '<div class="batch-timeline">';
+  batchRecipes.forEach(r => {
+    const h = Math.floor(currentTime / 60);
+    const m = currentTime % 60;
+    const timeStr = `${h}h${m.toString().padStart(2,'0')}`;
+    html += `<div class="batch-row"><span class="batch-time-badge">${timeStr}</span><span class="batch-row-name">${r.name}</span>${r.cookidoo ? `<a class="batch-row-link" href="${r.cookidoo}" target="_blank">Cookidoo ↗</a>` : ''}<span class="batch-row-duration">${r.time} min</span></div>`;
+    currentTime += r.time;
+    totalTime += r.time;
+  });
+  const endH = Math.floor(currentTime / 60);
+  const endM = currentTime % 60;
+  html += `<div class="batch-row"><span class="batch-time-badge">${endH}h${endM.toString().padStart(2,'0')}</span><span class="batch-row-name" style="color:var(--muted)">Mise en boîtes + étiquetage</span><span class="batch-row-duration">10 min</span></div>`;
+  totalTime += 10;
+  const totalH = Math.floor(totalTime / 60);
+  const totalM = totalTime % 60;
+  const ok = totalTime <= 120;
+  html += `<div class="batch-total"><span>Durée totale estimée</span><strong>${totalH > 0 ? totalH + 'h' : ''}${totalM > 0 ? totalM + 'min' : ''} ${ok ? '✓' : '⚠️ dépasse 2h'}</strong></div></div>`;
+  if (!ok) html += `<p style="font-size:13px;color:#C0392B;margin-top:8px;">⚠️ Ce planning dépasse 1h30. Retire un plat ou répartis la préparation sur samedi et dimanche.</p>`;
+  el.innerHTML = html;
+}
+
+// ---- COURSES MODALS ----
 function getCheckedItems() {
   const result = [];
   CATEGORIES.forEach(cat => {
@@ -422,7 +667,6 @@ function getCheckedItems() {
   });
   return result;
 }
-
 function openPicnicModal() {
   const items = getCheckedItems();
   const list = document.getElementById('picnicList');
@@ -437,33 +681,23 @@ function openPicnicModal() {
     catItems.forEach(item => {
       const li = document.createElement('li');
       li.className = 'picnic-item';
-      li.innerHTML = `
-        <div class="picnic-check" onclick="togglePicnicItem(this)">✓</div>
-        <span class="picnic-item-name">${item.name}${item.qty ? ' <span class=\"picnic-qty\">'+ item.qty +'</span>' : ''}</span>`;
+      li.innerHTML = `<div class="picnic-check" onclick="togglePicnicItem(this)">✓</div><span class="picnic-item-name">${item.name}${item.qty ? ' <span class=\"picnic-qty\">'+ item.qty +'</span>' : ''}</span>`;
       list.appendChild(li);
     });
   });
   document.getElementById('picnicModal').classList.add('open');
 }
-
-function togglePicnicItem(el) {
-  const li = el.closest('.picnic-item');
-  li.classList.toggle('done');
-}
-
 function openCarrefourModal() {
   const items = getCheckedItems();
   if (items.length === 0) return;
-  // Open all product pages at once
   items.forEach(item => {
     const hasLink = item.link && item.link.startsWith('http');
     const url = hasLink ? item.link : `https://www.carrefour.fr/recherche?q=${encodeURIComponent(item.name)}`;
     window.open(url, '_blank', 'noopener');
   });
 }
-
+function togglePicnicItem(el) { el.closest('.picnic-item').classList.toggle('done'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
 function copyList() {
   const items = getCheckedItems();
   const byCat = {};
@@ -481,6 +715,16 @@ function copyList() {
     setTimeout(() => { btn.textContent = 'Copier la liste'; btn.classList.remove('copied'); }, 2000);
   });
 }
+function copyShoppingList() {
+  const items = [...document.querySelectorAll('#shoppingList .picnic-item-name')].map(el => '• ' + el.textContent.trim());
+  const text = '🛒 COURSES SEMAINE\n\n' + items.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyShoppingBtn');
+    btn.textContent = '✓ Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier la liste'; btn.classList.remove('copied'); }, 2000);
+  });
+}
 
 document.querySelectorAll('.freq-chip').forEach(chip => {
   chip.addEventListener('click', () => {
@@ -490,10 +734,7 @@ document.querySelectorAll('.freq-chip').forEach(chip => {
     updateUI();
   });
 });
-document.getElementById('searchInput').addEventListener('input', e => {
-  searchQuery = e.target.value.toLowerCase().trim();
-  updateUI();
-});
+document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value.toLowerCase().trim(); updateUI(); });
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 });
